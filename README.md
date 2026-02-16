@@ -110,6 +110,25 @@ make -j4
 ./fcl_visualizer
 ```
 
+### Explanation of Results
+
+**Blue Cube**: Represents obj1.
+
+**Red Cube**: Represents obj2.
+
+**Yellow Sphere**: They mark the specific coordinates $(x, y, z)$ where the two shapes (e.g., the blue box and the red box) are actually touching or penetrating each other.
+If the objects are overlapping significantly, FCL calculates the "deepest" point of overlap or a set of points that best describe the contact patch.
+
+If you see multiple yellow spheres instead of just one, it means the collision surface is complex or flat-against-flat (like two boxes resting on each other).
+
+**Single Point**: Typical for Sphere-Sphere or Sphere-Box collision.
+
+**Multiple Points (Manifold)**: Typical for Box-Box collision where a whole face or edge is intersecting. FCL generates multiple contact points to stabilize the collision response (preventing the boxes from wobbling).
+
+You should visualize the following image:
+
+![Collision of two cubes](assets/image.png)
+
 ### More examples from the FCL Library
 
 For more examples, please refer to the test folder:
