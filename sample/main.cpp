@@ -13,6 +13,7 @@ std::shared_ptr<Boxf> box1_geom;
 std::shared_ptr<Boxf> box2_geom;
 CollisionObjectf* obj1;
 CollisionObjectf* obj2;
+std::vector<Contactf> contact_points; // Store collision contact points
 
 // Helper function to draw a wireframe box
 void drawBox(float size_x, float size_y, float size_z) {
@@ -33,15 +34,7 @@ void display() {
               0.0, 0.0, 0.0,   // Look-at target
               0.0, 1.0, 0.0);  // Up vector
 
-    // 1. Perform FCL Collision Test
-    CollisionRequestf request;
-    request.enable_contact = true;     // Tell FCL we want the exact contact points
-    request.num_max_contacts = 10;     // Maximum number of contacts to calculate
-    CollisionResultf result;
-    
-    collide(obj1, obj2, request, result);
-
-    // 2. Draw Box 1 (Blue)
+    // 1. Draw Box 1 (Blue)
     glPushMatrix();
     Eigen::Matrix4f mat1 = obj1->getTransform().matrix();
     glMultMatrixf(mat1.data()); // Apply FCL transform to OpenGL
@@ -57,18 +50,13 @@ void display() {
     drawBox(1.0, 1.0, 1.0);
     glPopMatrix();
 
-    // 4. Draw Contact Points (Yellow Spheres) if a collision occurs
-    if (result.isCollision()) {
-        std::vector<Contactf> contacts;
-        result.getContacts(contacts);
-        
-        glColor3f(1.0f, 1.0f, 0.0f); // Bright Yellow
-        for (const auto& contact : contacts) {
-            glPushMatrix();
-            glTranslatef(contact.pos.x(), contact.pos.y(), contact.pos.z());
-            glutSolidSphere(0.08, 16, 16); // Draw a sphere at the contact point
-            glPopMatrix();
-        }
+    // 3. Draw Contact Points (Yellow Spheres)
+    glColor3f(1.0f, 1.0f, 0.0f); // Yellow color
+    for (const auto& contact : contact_points) {
+        glPushMatrix();
+        glTranslatef(contact.pos.x(), contact.pos.y(), contact.pos.z());
+        glutSolidSphere(0.05, 16, 16); // Small sphere with radius 0.05
+        glPopMatrix();
     }
 
     glutSwapBuffers();
@@ -107,6 +95,29 @@ int main(int argc, char** argv) {
 
     glutDisplayFunc(display);
     glutReshapeFunc(reshape);
+
+    // --- FCL COLLISION TEST ---
+    CollisionRequestf request;
+    request.enable_contact = true;     // Tell FCL we want the exact contact points
+    request.num_max_contacts = 10;     // Maximum number of contacts to calculate
+    CollisionResultf result;
+    
+    collide(obj1, obj2, request, result);
+    
+    // Print collision results
+    if (result.isCollision()) {
+        std::cout << "Collision detected!" << std::endl;
+        result.getContacts(contact_points);
+        std::cout << "Number of contacts: " << contact_points.size() << std::endl;
+        for (size_t i = 0; i < contact_points.size(); ++i) {
+            std::cout << "Contact " << i << " position: ("
+                      << contact_points[i].pos.x() << ", "
+                      << contact_points[i].pos.y() << ", "
+                      << contact_points[i].pos.z() << ")" << std::endl;
+        }
+    } else {
+        std::cout << "No collision detected." << std::endl;
+    }
 
     std::cout << "Starting visualization. Close the window to exit." << std::endl;
     
