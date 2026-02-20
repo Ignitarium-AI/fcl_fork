@@ -29,6 +29,7 @@
 
 # Author: Jeongseok Lee <jslee02@gmail.com>
 
-/build
+*/build
 /build-*
 /doc/doxygen
+main.bak
